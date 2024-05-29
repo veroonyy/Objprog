@@ -1,0 +1,135 @@
+Kovács Veronika
+Mérnökinformatikus
+Q3HN0C
+
+from datetime import datetime
+from typing import Protocol, List
+
+class RoomBase(Protocol):
+    price: int
+    room_number: int
+
+    def room_details(self) -> str:
+        pass
+
+class SingleRoom:
+    def __init__(self, price: int, room_number: int):
+        self.price = price
+        self.room_number = room_number
+
+    def room_details(self) -> str:
+        return f"Single Room - Number: {self.room_number}, Price: {self.price} Ft"
+
+class DoubleRoom:
+    def __init__(self, price: int, room_number: int):
+        self.price = price
+        self.room_number = room_number
+
+    def room_details(self) -> str:
+        return f"Double Room - Number: {self.room_number}, Price: {self.price} Ft"
+
+class HotelManager:
+    def __init__(self, hotel_name: str):
+        self.hotel_name = hotel_name
+        self.rooms: List[RoomBase] = []
+        self.bookings = {}
+
+    def add_room(self, room: RoomBase):
+        self.rooms.append(room)
+
+    def list_rooms(self):
+        for room in self.rooms:
+            print(room.room_details())
+
+    def book_room(self, room_number: int, date: str):
+        if not self._is_valid_date(date):
+            print(f"Invalid date format: {date}")
+            return
+
+        if room_number not in self.bookings:
+            self.bookings[room_number] = []
+
+        if date in self.bookings[room_number]:
+            print(f"Room {room_number} is already booked on {date}")
+        else:
+            self.bookings[room_number].append(date)
+            room = self._find_room(room_number)
+            if room:
+                print(f"Booked room {room_number} for {date}")
+                print(f"Total cost: {room.price} Ft")
+
+    def cancel_booking(self, room_number: int, date: str):
+        if room_number in self.bookings and date in self.bookings[room_number]:
+            self.bookings[room_number].remove(date)
+            print(f"Cancelled booking for room {room_number} on {date}")
+        else:
+            print(f"No booking found for room {room_number} on {date}")
+
+    def list_bookings(self):
+        for room, dates in self.bookings.items():
+            for date in dates:
+                print(f"Room {room} booked for {date}")
+
+    def _find_room(self, room_number: int) -> RoomBase:
+        for room in self.rooms:
+            if room.room_number == room_number:
+                return room
+        return None
+
+    def _is_valid_date(self, date: str) -> bool:
+        try:
+            booking_date = datetime.strptime(date, "%Y-%m-%d")
+            return booking_date > datetime.now()
+        except ValueError:
+            return False
+
+def setup_default_bookings(manager: HotelManager):
+    manager.book_room(1, "2024-06-01")
+    manager.book_room(1, "2024-06-02")
+    manager.book_room(2, "2024-06-03")
+    manager.book_room(2, "2024-06-04")
+    manager.book_room(3, "2024-06-05")
+
+def display_menu() -> str:
+    print("1. Show available rooms")
+    print("2. Book a room")
+    print("3. Cancel a booking")
+    print("4. Show all bookings")
+    print("5. Exit")
+    return input("Choose an option (1-5): ")
+
+if __name__ == "__main__":
+    hotel = HotelManager("Grand Hotel")
+
+    hotel.add_room(SingleRoom(100000, 1))
+    hotel.add_room(DoubleRoom(150000, 2))
+    hotel.add_room(DoubleRoom(200000, 3))
+
+    setup_default_bookings(hotel)
+
+    while True:
+        option = display_menu()
+
+        if option == "1":
+            print("Available Rooms:")
+            hotel.list_rooms()
+
+        elif option == "2":
+            room_num = int(input("Enter room number to book: "))
+            booking_date = input("Enter date (YYYY-MM-DD): ")
+            hotel.book_room(room_num, booking_date)
+
+        elif option == "3":
+            room_num = int(input("Enter room number to cancel booking: "))
+            booking_date = input("Enter date (YYYY-MM-DD): ")
+            hotel.cancel_booking(room_num, booking_date)
+
+        elif option == "4":
+            print("Current Bookings:")
+            hotel.list_bookings()
+
+        elif option == "5":
+            break
+
+        else:
+            print("Invalid choice, please try again.")
